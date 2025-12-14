@@ -28,7 +28,7 @@ mmd -i "$OUTPUT_IMG" ::EFI/BOOT
 
 # 4. Copy and Rename Binaries
 #    The UEFI spec requires the default bootloader to be named BOOTX64.EFI.
-#    We rename the 'shim' to BOOTX64.EFI so the BIOS loads it first.
+#    We rename the 'shim' to BOOTX64.EFI so the UEFI firmware loads it first.
 echo "Copying shim ($SRC_SHIM) -> ::EFI/BOOT/BOOTX64.EFI"
 mcopy -i "$OUTPUT_IMG" "$SRC_SHIM" ::EFI/BOOT/BOOTX64.EFI
 
