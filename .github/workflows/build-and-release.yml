@@ -1,0 +1,62 @@
+name: Build and Release ESP Image
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    container:
+      image: quay.io/centos/centos:stream9
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          dnf install -y dosfstools mtools shim-x64 grub2-efi-x64
+      
+      - name: Build ESP image
+        run: |
+          ./build-centos9-esp.sh
+      
+      - name: Verify image was created
+        run: |
+          ls -lh esp-centos9.img
+          file esp-centos9.img
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: esp-centos9-image
+          path: esp-centos9.img
+      
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: esp-centos9.img
+          body: |
+            ## ESP UEFI Image for CentOS Stream 9
+            
+            This release contains the ESP UEFI image for use with OpenStack Ironic.
+            
+            ### Features
+            - Built for CentOS Stream 9
+            - Supports UEFI Secure Boot
+            - Includes signed shim and grub2 bootloaders
+            - Compatible with Ironic DIB files from https://tarballs.opendev.org/openstack/ironic-python-agent/dib/files/
+            
+            ### Usage
+            This image can be used with Ironic for UEFI virtual media boot with ISO generation.
+            
+            ### File Details
+            - **esp-centos9.img**: 3MB FAT12 formatted image containing UEFI bootloaders
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
